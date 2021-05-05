@@ -54,11 +54,12 @@ function attachLink(spanEl: HTMLSpanElement, text: string, executionCount: numbe
 	const aEl = document.createElement('a');
 	aEl.href = `command:bje.revealrange?\"${executionCount},${lineNumber}\"`;
 	aEl.setAttribute('data-href', `command:bje.revealrange?\"${executionCount},${lineNumber}\"`);
+	aEl.title = 'Navigate to the cell';
 	aEl.text = text;
 	spanEl.appendChild(aEl);
 }
 
-function renderOutput(pre: HTMLElement, datas: string[]) {
+function renderTraceback(pre: HTMLElement, datas: string[]) {
 	datas.forEach((data) => {
 		let parsedHTML: HTMLSpanElement[] = [document.createElement('span')];
 		let executionCount = -1;
@@ -102,15 +103,41 @@ function renderOutput(pre: HTMLElement, datas: string[]) {
 	});
 }
 
+function renderErrorTitle(divEl: HTMLElement, ename: string, evalue: string) {
+	if (ename === 'ModuleNotFoundError') {
+		const moduleNameMatches = /No module named \'(\S+)\'/.exec(evalue);
+		if (moduleNameMatches && moduleNameMatches.length) {
+			const nameSpanEl = document.createElement('span');
+			nameSpanEl.innerText = `${ename}: `;
+			divEl.appendChild(nameSpanEl);
+
+			const moduleName = moduleNameMatches[1];
+			const aEl = document.createElement('a');
+			aEl.href = `command:bje.installModule?\"${moduleName}\"`;
+			aEl.setAttribute('data-href', `command:bje.installModule?\"${moduleName}\"`);
+			aEl.title = 'Install Module ' + moduleName;
+			aEl.text = evalue;
+			const valueSpanEl = document.createElement('span');
+			valueSpanEl.appendChild(aEl);
+			divEl.appendChild(valueSpanEl);
+			return;
+		}
+	}
+
+	const errorMessage = `${ename}: ${evalue}`;
+	divEl.innerText = errorMessage;
+}
 
 // This function is called to render your contents.
 export function render({ container, mimeType, data }: IRenderInfo) {
 	// Format the JSON and insert it as <pre><code>{ ... }</code></pre>
 	// Replace this with your custom code!
+	const divEl = document.createElement('div');
+	renderErrorTitle(divEl, data.ename, data.evalue);
+	container.appendChild(divEl);
 	const pre = document.createElement('pre');
 	pre.classList.add(style.json);
-
-	renderOutput(pre, data.traceback);
+	renderTraceback(pre, data.traceback);
 	container.appendChild(pre);
 }
 
