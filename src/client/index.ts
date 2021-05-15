@@ -20,7 +20,7 @@ __webpack_public_path__ = new URL(scriptUrl.replace(/[^/]+$/, '') + __webpack_re
 // rendering logic inside of the `render()` function.
 // ----------------------------------------------------------------------------
 
-const notebookApi = acquireNotebookRendererApi("better-jupyter-errors");
+const notebookApi = acquireNotebookRendererApi("jupyter-dask-shortcut");
 
 // Track cells that we render so that, in development, we can re-render then
 // when the scripts change.
@@ -43,14 +43,13 @@ notebookApi.onDidCreateOutput((evt) => {
 
 // Function to render your contents in a single tag, calls the `render()`
 // function from render.ts. Also catches and displays any thrown errors.
-const renderTag = ({ element, mime, value }: NotebookOutputEventParams) =>
-  errorOverlay.wrap(element, () => {
-    element.innerHTML = '';
-    const node = document.createElement('div');
-    element.appendChild(node);
+const renderTag = ({ element, mime, value }: NotebookOutputEventParams) => {
+  element.innerHTML = '';
+  const node = document.createElement('div');
+  element.appendChild(node);
 
-    render({ container: node, mimeType: mime, data: value, notebookApi });
-  });
+  render({ container: node, mimeType: mime, data: value, notebookApi });
+};
 
 function renderAllTags() {
   for (const evt of rendered.values()) {

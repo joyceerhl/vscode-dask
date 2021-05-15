@@ -1,14 +1,18 @@
 {
-  "name": "better-jupyter-errors",
-  "displayName": "better-jupyter-errors",
-  "description": "Better Jupyter Errors",
-  "version": "0.0.1",
+  "name": "vscode-dask",
+  "displayName": "Dask",
+  "description": "Dask for VS Code",
+  "version": "0.0.2",
   "author": {
-    "name": "rebornix"
+    "name": "joyceerhl"
   },
-  "publisher": "rebornix",
+  "license": "MIT",
+  "publisher": "joyceerhl",
+  "repository": {
+    "url": "https://github.com/joyceerhl/vscode-dask"
+  },
   "engines": {
-    "vscode": "^1.55.0"
+    "vscode": "^1.57.0-insider"
   },
   "categories": [
     "Other"
@@ -21,21 +25,18 @@
   "contributes": {
     "commands": [
       {
-        "command": "bje.revealrange",
-        "title": "Reveal Error Range"
-      },
-      {
-        "command": "bje.installModule",
-        "title": "Install Missing Module"
+        "command": "vscode-dask.connectToDaskSession",
+        "title": "Connect to Existing Dask Dashboard",
+        "category": "Dask"
       }
     ],
     "notebookOutputRenderer": [
       {
-        "id": "better-jupyter-errors",
+        "id": "jupyter-dask-shortcut",
         "entrypoint": "./out/client/index.js",
-        "displayName": "Better Jupyter Errors",
+        "displayName": "Jupyter Dask Shortcut",
         "mimeTypes": [
-          "application/x.notebook.error-traceback"
+          "text/html"
         ],
         "dependencies": []
       }
@@ -51,7 +52,7 @@
     "watch:extension": "tsc -b --watch",
     "watch:client": "webpack --mode development --watch",
     "dev": "npm run compile && concurrently -r npm:watch:extension npm:dev:client",
-    "dev:client": "webpack-dev-server",
+    "dev:client": "webpack serve",
     "pretest": "npm run compile && npm run lint",
     "test": "node ./out/test/runTest.js",
     "updatetypes": "cd src/extension/types && vscode-dts dev && vscode-dts master && cd ../../test/types && vscode-dts dev && vscode-dts master",
@@ -77,11 +78,12 @@
     "vscode-dts": "^0.3.1",
     "vscode-notebook-error-overlay": "^1.0.1",
     "vscode-test": "^1.5.0",
-    "webpack": "^5.19.0",
-    "webpack-cli": "^4.4.0",
+    "webpack": "^5.37.0",
+    "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
+    "@webpack-cli/serve": "^1.4.0",
     "ansicolor": "^1.1.93"
   }
 }

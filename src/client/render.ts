@@ -40,105 +40,39 @@ const nameMapping: { [key: string]: string } = {
 	'lightWhite': '--vscode-terminal-ansiBrightWhite'
 };
 
-function updateColor(spanEl: HTMLSpanElement, span: any) {
-	if (span.color) {
-		const name = span.color.name;
-		const cssVariable = nameMapping[name];
-		spanEl.setAttribute('style', `color: var(${cssVariable});`);
-	} else {
-		spanEl.setAttribute('style', span.css);
-	}
-}
+function renderDaskShortcutTitle(divEl: HTMLElement, mimeType: string, data: any) {
+  if (mimeType !== "text/html") {
+    return;
+  }
 
-function attachLink(spanEl: HTMLSpanElement, text: string, executionCount: number, lineNumber: number) {
-	const aEl = document.createElement('a');
-	aEl.href = `command:bje.revealrange?\"${executionCount},${lineNumber}\"`;
-	aEl.setAttribute('data-href', `command:bje.revealrange?\"${executionCount},${lineNumber}\"`);
-	aEl.title = 'Navigate to the cell';
-	aEl.text = text;
-	spanEl.appendChild(aEl);
-}
+  const valueSpanEl = document.createElement('span');
 
-function renderTraceback(pre: HTMLElement, datas: string[]) {
-	datas.forEach((data) => {
-		let parsedHTML: HTMLSpanElement[] = [document.createElement('span')];
-		let executionCount = -1;
-		const ret = parse(data);
-		ret.spans.forEach((span: any) => {
-			if (span.text === '\n') {
-				parsedHTML.push(document.createElement('span'));
-				return;
-			}
+  // Scrape the output for a matching Dask dashboard URL
+  const matches = /<li><b>Dashboard: <\/b><a href='(.*)' target='_blank'>/gm.exec(data);
+  if (matches && matches.length > 1) {
+    const url = matches[1];
+    const aEl = document.createElement('a');
+    aEl.href = `command:vscode-dask.connectToDaskSession?\"${url}\"`;
+    aEl.setAttribute('data-href', `command:vscode-dask.connectToDaskSession?\"${url}\"`);
+    aEl.title = 'Open Dask Dashboard in VS Code';
+    aEl.text = 'Open Dask Dashboard in VS Code';
+    valueSpanEl.appendChild(aEl);
+  }
 
-			const lastArr = parsedHTML[parsedHTML.length - 1];
-			const inputIndexMatches = /^\<ipython-input-(\d)/.exec(span.text);
-			if (inputIndexMatches && inputIndexMatches.length === 2) {
-				executionCount = Number(inputIndexMatches[1])
-				const spanEl = document.createElement('span');
-				updateColor(spanEl, span);
-				attachLink(spanEl, span.text, executionCount, 1);
-				lastArr.appendChild(spanEl);
-				return;
-			}
+  // Put the original HTML in here too
+  const originalHtml = document.createElement('span');
+  originalHtml.innerHTML = data;
+  valueSpanEl.appendChild(originalHtml);
+  divEl.appendChild(valueSpanEl);
 
-			const errorLineNumberMatches = /^\-{4}> (\d)/.exec(span.text);
-			if (errorLineNumberMatches && errorLineNumberMatches.length === 2) {
-				const lineNumber = Number(errorLineNumberMatches[1]);
-				const spanEl = document.createElement('span');
-				updateColor(spanEl, span);
-				attachLink(spanEl, span.text, executionCount, lineNumber);
-				lastArr.appendChild(spanEl);
-				return;
-			}
-
-			const spanEl = document.createElement('span');
-			updateColor(spanEl, span);
-			spanEl.textContent = span.text;
-			lastArr.appendChild(spanEl);
-		});
-
-		parsedHTML.forEach(el => {
-			pre.appendChild(el);
-		});
-	});
-}
-
-function renderErrorTitle(divEl: HTMLElement, ename: string, evalue: string) {
-	if (ename === 'ModuleNotFoundError') {
-		const moduleNameMatches = /No module named \'(\S+)\'/.exec(evalue);
-		if (moduleNameMatches && moduleNameMatches.length) {
-			const nameSpanEl = document.createElement('span');
-			nameSpanEl.innerText = `${ename}: `;
-			divEl.appendChild(nameSpanEl);
-
-			const moduleName = moduleNameMatches[1];
-			const aEl = document.createElement('a');
-			aEl.href = `command:bje.installModule?\"${moduleName}\"`;
-			aEl.setAttribute('data-href', `command:bje.installModule?\"${moduleName}\"`);
-			aEl.title = 'Install Module ' + moduleName;
-			aEl.text = evalue;
-			const valueSpanEl = document.createElement('span');
-			valueSpanEl.appendChild(aEl);
-			divEl.appendChild(valueSpanEl);
-			return;
-		}
-	}
-
-	const errorMessage = `${ename}: ${evalue}`;
-	divEl.innerText = errorMessage;
+  return data;
 }
 
 // This function is called to render your contents.
 export function render({ container, mimeType, data }: IRenderInfo) {
-	// Format the JSON and insert it as <pre><code>{ ... }</code></pre>
-	// Replace this with your custom code!
 	const divEl = document.createElement('div');
-	renderErrorTitle(divEl, data.ename, data.evalue);
+  renderDaskShortcutTitle(divEl, mimeType, data);
 	container.appendChild(divEl);
-	const pre = document.createElement('pre');
-	pre.classList.add(style.json);
-	renderTraceback(pre, data.traceback);
-	container.appendChild(pre);
 }
 
 if (module.hot) {
