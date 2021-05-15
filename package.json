@@ -2,7 +2,7 @@
   "name": "vscode-dask",
   "displayName": "Dask",
   "description": "Dask for VS Code",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": {
     "name": "joyceerhl"
   },
